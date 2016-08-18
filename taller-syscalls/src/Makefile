@@ -1,16 +1,14 @@
-CFLAGS= -Wall -O0 -g -ggdb -m32
-NASMFLAGS= -g -ggdb
-LDFLAGS=-static -m32 -L'/usr/lib32'
+CFLAGS=-Wall -O0 -g -ggdb
+LDFLAGS=
 CC=gcc
 
-BINS=launch
+BINS=launch justiciero
 
 OBJS=$(BINS:=.o)
 
-all: $(BINS)
-
-# Dependencias
-launch.o: launch.c
+all: $(BINS) $(OBJS)
 
 clean:
 	rm -rf $(OBJS) $(BINS)
+
+.PHONY: all clean
