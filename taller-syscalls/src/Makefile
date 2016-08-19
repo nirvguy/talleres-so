@@ -2,7 +2,7 @@ CFLAGS=-Wall -O0 -g -ggdb
 LDFLAGS=
 CC=gcc
 
-BINS=launch justiciero
+BINS=launch justiciero my-hai
 
 OBJS=$(BINS:=.o)
 
