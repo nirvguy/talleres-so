@@ -1,4 +1,5 @@
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -14,6 +15,6 @@
 
 #define MAX_MSG_LENGTH  1024
 
-#define END_STRING      "chau\n"
+#define END_STRING      "chau"
 
 #define COMPLETE_STRING "fin-respuesta"
