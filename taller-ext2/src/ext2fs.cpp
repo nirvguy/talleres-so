@@ -280,6 +280,19 @@ unsigned int Ext2FS::blockaddr2sector(unsigned int block)
  */
 struct Ext2FSInode * Ext2FS::load_inode(unsigned int inode_number)
 {
+	const int block_size = superblock()->log_block_size;
+	Ext2FSInode* inodos = (unsigned int*) malloc(block_size);
+	int inode_table = block_group(blockgroup_for_inode(inode_number))->inode_table;
+	const int inodes_per_block = block_size / sizeof(Ext2FSInode);
+	int table_offset = inode_number % superblock()->inodes_per_group;
+	int inode_block = inode_table + (table_offset / inodes_per_block);
+	int inode_nr = table_offset % inodes_per_block;
+	read_block(inode_block, inodos);
+	Ext2FSInode* inode = malloc(sizeof(Ext2FSInode));
+	memcpy(inode, inodos[inode_nr], sizeof(Ext2FSInode));
+	free(inodos);
+	return inode;
+}
 
 
 unsigned int get_table_address(unsigned int block_address, unsigned int index, unsigned int block_size) {
