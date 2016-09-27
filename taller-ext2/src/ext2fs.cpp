@@ -281,11 +281,37 @@ unsigned int Ext2FS::blockaddr2sector(unsigned int block)
 struct Ext2FSInode * Ext2FS::load_inode(unsigned int inode_number)
 {
 
+
+unsigned int get_table_address(unsigned int block_address, unsigned int index, unsigned int block_size) {
+	// Carga la tabla de entradas
+	unsigned int* tabla  = (unsigned int*) malloc(block_size);
+	read_block(block_address, tabla);
+	int ret = block_address[index];
+	free(tabla);
+	return ret;
 }
 
 unsigned int Ext2FS::get_block_address(struct Ext2FSInode * inode, unsigned int block_number)
 {
-
+	if (block_number < 12) { // directo?
+		return inode->block[block_number];
+	} else {
+		const int block_size = superblock() ->log_block_size;
+		int entries = block_size / EXT2_ADDR_SIZE;
+		block_number -= 12;
+		if (block_number < entries) // simple?
+			return get_address(inode->block[12], block_number);
+		} else if (block_number < entries * entries) { // doble?
+			block_number -= entries;
+			int t_addr = get_address(inode->block[13], block_number / entries, block_size);
+			return get_address(t_addr, block_number % entries);
+		} else { // triple?
+			block_number -= entries*entries + entries;
+			int t_ind_addr = get_address(inode->block[14], block_number / (entries * entries), block_size);
+			int t_addr = get_address(t_ind_addr, block_number / entries, block_size);
+			return get_address(t_addr, block_number % entries, block_size);
+		}
+	}
 }
 
 void Ext2FS::read_block(unsigned int block_address, unsigned char * buffer)

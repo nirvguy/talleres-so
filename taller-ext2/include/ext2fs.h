@@ -105,6 +105,8 @@
 
 #define EXT2_RDIR_INODE_NUMBER	2
 
+#define EXT2_ADDR_SIZE     4
+
 struct __attribute__((__packed__)) Ext2FSSuperblock
 {
 	unsigned int inodes_count;
