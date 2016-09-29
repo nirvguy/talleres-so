@@ -339,9 +339,41 @@ struct Ext2FSInode * Ext2FS::get_file_inode_from_dir_inode(struct Ext2FSInode * 
 {
 	if(from == NULL)
 		from = load_inode(EXT2_RDIR_INODE_NUMBER);
+	
 	//std::cerr << *from << std::endl;
 	assert(INODE_ISDIR(from));
 
+	int i = 0;
+	
+	unsigned int block_size = 1024 << _superblock->log_block_size;
+	char* buffer = (char*) malloc(from->size);
+	for (i = 0; i < from->blocks; i++)
+		read_block(get_block_address(from, i), (unsigned char*) buffer);
+	
+	Ext2FSDirEntry* addr_d_entry = (Ext2FSDirEntry*) buffer;
+	int inode = NULL;
+
+	for (i=0; i < from->blocks; i++) {
+		char* name = (char*) malloc(addr_d_entry->name_length + 1);
+		memcpy(name, addr_d_entry->name, addr_d_entry->name_length);
+		name[addr_d_entry->name_length] = 0;
+		int res = strcmp(name, filename);
+		free(name);
+		if(res == 0) {
+			inode = addr_d_entry->inode;
+			break;
+		}
+		
+		addr_d_entry += sizeof(Ext2FSDirEntry) + addr_d_entry->name_length - 1;
+	}
+
+
+	free(buffer);
+
+	if (inode != NULL)
+		return load_inode(inode);
+	else
+		return NULL;
 }
 
 fd_t Ext2FS::get_free_fd()
