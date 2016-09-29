@@ -5,6 +5,7 @@
 #include <cassert>
 #include <cstring>
 #include <iostream>
+#include <stdlib.h>
 
 Ext2FS::Ext2FS(HDD & disk, unsigned char pnumber) : _hdd(disk), _partition_number(pnumber)
 {
@@ -281,25 +282,25 @@ unsigned int Ext2FS::blockaddr2sector(unsigned int block)
 struct Ext2FSInode * Ext2FS::load_inode(unsigned int inode_number)
 {
 	const int block_size = superblock()->log_block_size;
-	Ext2FSInode* inodos = (unsigned int*) malloc(block_size);
+	Ext2FSInode* inodos = (Ext2FSInode*) malloc(block_size);
 	int inode_table = block_group(blockgroup_for_inode(inode_number))->inode_table;
 	const int inodes_per_block = block_size / sizeof(Ext2FSInode);
 	int table_offset = inode_number % superblock()->inodes_per_group;
 	int inode_block = inode_table + (table_offset / inodes_per_block);
 	int inode_nr = table_offset % inodes_per_block;
-	read_block(inode_block, inodos);
-	Ext2FSInode* inode = malloc(sizeof(Ext2FSInode));
-	memcpy(inode, inodos[inode_nr], sizeof(Ext2FSInode));
+	read_block(inode_block, (unsigned char*) inodos);
+	Ext2FSInode* inode = (Ext2FSInode*) malloc(sizeof(Ext2FSInode));
+	memcpy(inode, &(inodos[inode_nr]), sizeof(Ext2FSInode));
 	free(inodos);
 	return inode;
 }
 
 
-unsigned int get_table_address(unsigned int block_address, unsigned int index, unsigned int block_size) {
+unsigned int Ext2FS::get_table_address(unsigned int block_address, unsigned int index, unsigned int block_size) {
 	// Carga la tabla de entradas
 	unsigned int* tabla  = (unsigned int*) malloc(block_size);
-	read_block(block_address, tabla);
-	int ret = block_address[index];
+	read_block(block_address, (unsigned char*) tabla);
+	int ret = tabla[index];
 	free(tabla);
 	return ret;
 }
@@ -312,17 +313,17 @@ unsigned int Ext2FS::get_block_address(struct Ext2FSInode * inode, unsigned int 
 		const int block_size = superblock() ->log_block_size;
 		int entries = block_size / EXT2_ADDR_SIZE;
 		block_number -= 12;
-		if (block_number < entries) // simple?
-			return get_address(inode->block[12], block_number);
+		if (block_number < entries) { // simple?
+			return get_table_address(inode->block[12], block_number, block_size);
 		} else if (block_number < entries * entries) { // doble?
 			block_number -= entries;
-			int t_addr = get_address(inode->block[13], block_number / entries, block_size);
-			return get_address(t_addr, block_number % entries);
+			int t_addr = get_table_address(inode->block[13], block_number / entries, block_size);
+			return get_table_address(t_addr, block_number % entries, block_size);
 		} else { // triple?
 			block_number -= entries*entries + entries;
-			int t_ind_addr = get_address(inode->block[14], block_number / (entries * entries), block_size);
-			int t_addr = get_address(t_ind_addr, block_number / entries, block_size);
-			return get_address(t_addr, block_number % entries, block_size);
+			int t_ind_addr = get_table_address(inode->block[14], block_number / (entries * entries), block_size);
+			int t_addr = get_table_address(t_ind_addr, block_number / entries, block_size);
+			return get_table_address(t_addr, block_number % entries, block_size);
 		}
 	}
 }

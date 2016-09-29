@@ -237,6 +237,7 @@ public:
 	unsigned int blockaddr2sector(unsigned int block);
 
 	// Unimplemented methods
+	unsigned int get_table_address(unsigned int block_address, unsigned int index, unsigned int block_size);
 	unsigned int get_block_address(struct Ext2FSInode * inode, unsigned int block_number);
 	void read_block(unsigned int block_address, unsigned char * buffer);
 	struct Ext2FSInode * get_file_inode_from_dir_inode(struct Ext2FSInode * from, const char * filename);
