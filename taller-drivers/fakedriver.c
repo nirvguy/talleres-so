@@ -6,8 +6,8 @@
 #define FAKESERIAL_FIFO_SIZE PAGE_SIZE
 
 static int __init fakeserial_init(void) {
-    printk(KERN_DEBUG "fakeserial: Initialized!\n");
-    return 0;
+	printk(KERN_DEBUG "fakeserial: Initialized!\n");
+	return 0;
 }
 
 static void __exit fakeserial_exit(void) {
